@@ -1,0 +1,16 @@
+PRIMARY_TOPIC,SENTIMENT,REVIEW_COUNT
+ambiance,negative,372
+ambiance,neutral,964
+ambiance,positive,2958
+cleanliness,negative,538
+cleanliness,neutral,102
+cleanliness,positive,351
+food_quality,negative,3636
+food_quality,neutral,3612
+food_quality,positive,22632
+service,negative,4761
+service,neutral,1108
+service,positive,6204
+value,negative,735
+value,neutral,628
+value,positive,1035

@@ -1,0 +1,13 @@
+SENTIMENT,INTENSITY,REVIEW_COUNT
+negative,1,1
+negative,3,613
+negative,4,4533
+negative,5,4895
+neutral,1,23
+neutral,2,348
+neutral,3,5807
+neutral,4,236
+positive,2,1
+positive,3,2032
+positive,4,16192
+positive,5,14955

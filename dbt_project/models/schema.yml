@@ -1,0 +1,124 @@
+version: 2
+
+models:
+  - name: stg_reviews
+    description: "Bronze layer. Raw Yelp reviews inner-joined to their Gemini enrichment output on review_id. One row per enriched review."
+    columns:
+      - name: review_id
+        description: "Yelp review identifier."
+      - name: business_id
+        description: "Yelp business identifier."
+      - name: user_id
+        description: "Yelp reviewer identifier (kept for lineage; never exported to the dashboard)."
+      - name: stars
+        description: "Star rating given by the reviewer (1-5)."
+      - name: text
+        description: "Review text (never exported to the dashboard)."
+      - name: date
+        description: "Review timestamp as loaded from the raw JSON (epoch nanoseconds)."
+      - name: sentiment
+        description: "LLM-extracted overall sentiment, as returned by Gemini."
+      - name: primary_topic
+        description: "LLM-extracted main topic of the review."
+      - name: secondary_topics
+        description: "LLM-extracted list of up to two additional topics (JSON string)."
+      - name: intensity
+        description: "LLM-scored strength of the opinion, 1 (mild) to 5 (very strong)."
+      - name: is_local_regular
+        description: "LLM flag: the reviewer appears to be a repeat local customer."
+
+  - name: int_reviews_clean
+    description: "Silver layer. Cleaned and type-cast reviews with LLM enrichment fields. Missing LLM fields get defaults, and every row carries a quality_status flag instead of being dropped."
+    columns:
+      - name: review_id
+        description: "Primary key from the Yelp dataset."
+        tests:
+          - unique
+          - not_null
+      - name: business_id
+        description: "Yelp business identifier; joins to RAW_BUSINESSES."
+      - name: user_id
+        description: "Yelp reviewer identifier (not used downstream)."
+      - name: stars
+        description: "Star rating cast to integer."
+        tests:
+          - not_null
+      - name: review_date
+        description: "Review date converted from epoch nanoseconds."
+      - name: sentiment
+        description: "Lower-cased LLM sentiment; defaults to 'neutral' when missing (such rows are flagged_incomplete)."
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['positive', 'neutral', 'negative']
+      - name: primary_topic
+        description: "LLM main topic; 'unknown' when missing (such rows are flagged_incomplete)."
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['food_quality', 'service', 'ambiance', 'value', 'cleanliness']
+              config:
+                where: "quality_status = 'clean'"
+      - name: intensity
+        description: "LLM intensity score as integer; defaults to 3 when missing."
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [1, 2, 3, 4, 5]
+                quote: false
+              config:
+                where: "quality_status = 'clean'"
+      - name: is_local_regular
+        description: "LLM local-regular flag as boolean; defaults to FALSE when missing."
+      - name: secondary_topics
+        description: "Secondary topics parsed into a Snowflake VARIANT array."
+      - name: quality_status
+        description: "'clean', 'flagged_incomplete' (sentiment or topic missing) or 'flagged_invalid_rating' (stars missing or outside 1-5)."
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['clean', 'flagged_incomplete', 'flagged_invalid_rating']
+
+  - name: business_sentiment_summary
+    description: "Gold layer. Business-level aggregation of clean reviews: sentiment mix, intensity, local-regular share and the sentiment-stars gap. Only businesses with more than 5 clean reviews."
+    columns:
+      - name: business_id
+        description: "Yelp business identifier (replaced by an anonymous label in the published demo data)."
+        tests:
+          - unique
+          - not_null
+      - name: total_reviews
+        description: "Number of clean reviews for the business."
+      - name: avg_stars
+        description: "Mean star rating."
+      - name: avg_intensity
+        description: "Mean LLM intensity score."
+      - name: pct_positive
+        description: "Percent of reviews with positive sentiment."
+      - name: pct_negative
+        description: "Percent of reviews with negative sentiment."
+      - name: pct_neutral
+        description: "Percent of reviews with neutral sentiment."
+      - name: pct_local_regulars
+        description: "Percent of reviews flagged as written by a local regular."
+      - name: sentiment_stars_gap
+        description: "avg_stars minus the mean sentiment score (positive 4.5, neutral 3.0, negative 1.5). Positive values mean stars are more generous than the written sentiment."
+      - name: top_topic
+        description: "Most frequent primary_topic for the business."
+
+  - name: topic_performance_by_category
+    description: "Gold layer. Review stats per raw Yelp category string and primary topic (groups with more than 20 reviews)."
+    columns:
+      - name: categories
+        description: "Raw comma-separated Yelp category list of the business."
+      - name: primary_topic
+        description: "LLM main topic."
+      - name: review_count
+        description: "Number of clean reviews in the group."
+      - name: avg_stars
+        description: "Mean star rating."
+      - name: avg_intensity
+        description: "Mean LLM intensity score."
+      - name: pct_positive
+        description: "Percent of reviews with positive sentiment."

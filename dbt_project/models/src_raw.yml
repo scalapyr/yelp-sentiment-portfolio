@@ -1,0 +1,17 @@
+version: 2
+
+sources:
+  - name: raw
+    description: "Tables loaded by the Python pipeline (pipeline/ingestion and pipeline/load)."
+    database: YELP_DB
+    schema: RAW
+    tables:
+      - name: raw_reviews
+        identifier: RAW_REVIEWS
+        description: "First 50,000 rows of yelp_academic_dataset_review.json, columns upper-cased."
+      - name: raw_reviews_enriched
+        identifier: RAW_REVIEWS_ENRICHED
+        description: "Gemini enrichment output (sentiment, intensity, primary_topic, secondary_topics, is_local_regular) keyed by REVIEW_ID; only rows that returned valid JSON."
+      - name: raw_businesses
+        identifier: RAW_BUSINESSES
+        description: "First 50,000 rows of yelp_academic_dataset_business.json, columns upper-cased."

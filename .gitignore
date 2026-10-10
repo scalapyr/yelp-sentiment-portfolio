@@ -1,0 +1,43 @@
+# ── secrets ─────────────────────────────
+.env
+.env.*
+!.env.example
+.streamlit/secrets.toml
+profiles.yml
+!dbt_project/profiles.yml.example
+*.pem
+*.p8
+*.key
+
+# ── data (Yelp Open Dataset must not be redistributed) ──
+*.json
+*.jsonl
+*.parquet
+*.duckdb
+*.csv
+!data/demo/*.csv
+checkpoint.txt
+current_job_id.txt
+
+# ── dbt ─────────────────────────────────
+dbt_project/target/
+dbt_project/dbt_packages/
+dbt_project/logs/
+logs/
+*.log
+
+# ── python / tooling ────────────────────
+venv/
+.venv/
+env/
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.pytest_cache/
+
+# ── OS / editor ─────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
